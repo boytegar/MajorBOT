@@ -263,6 +263,8 @@ def convert_time(unix_time):
     return formatted_time
 
 def main():
+    selector_task = input("auto clear single task y/n : ").strip().lower()
+    selector_daily = input("auto clear daily task y/n : ").strip().lower()
     while True:
         majors = 0
         delay_time = (8 * 3900)
@@ -324,51 +326,57 @@ def main():
                     reward = data_roulette.get('rating_award')
                     if reward is not None:
                         print_(f"Success Reward Roulette : {data_roulette.get('rating_award')}")
-                
-                print_('Get daily Task')
-                data_daily = getdaily(token)
-                if data_daily is not None:
-                    if len(data_daily) > 0:
-                        for daily in reversed(data_daily):
-                            id = daily.get('id')
-                            type = daily.get('type')
-                            title = daily.get('title')
-                            is_completed = daily.get('is_completed')
-                            if title not in ["Donate rating", "Invite more Friends", "Boost Major channel",
-                                              "Promote TON blockchain", "Promote TON blockchain #2", "Promote TON blockchain #3",
-                                              "Stars Purchase", "Extra Stars Purchase", "Boost Roxman channel"]:
-                                if is_completed == False:
+
+                if selector_daily == "y":
+                    print_('Get daily Task')
+                    data_daily = getdaily(token)
+                    if data_daily is not None:
+                        if len(data_daily) > 0:
+                            for daily in reversed(data_daily):
+                                id = daily.get('id')
+                                type = daily.get('type')
+                                title = daily.get('title')
+                                is_completed = daily.get('is_completed')
+                                if 'stars' in title.lower():
+                                    print_(f"Skip Task : {title}")
+                                    continue
+                                if 'promote' in title.lower():
+                                    print_(f"Skip Task : {title}")
+                                    continue
+                                if title not in ["Donate rating", "Invite more Friends", "Boost Major channel", "Boost Roxman channel"]:
+                                    if is_completed == False:
+                                        time.sleep(2)
+                                        payload = {
+                                            'task_id': id
+                                        }
+                                        data_done = donetask(token, payload)
+                                        if data_done is not None:
+                                            print_(f"Task : {daily.get('title')} | Reward : {daily.get('award')} | Status: {data_done.get('is_completed')}")
+                        else:
+                            print_('No have daily task')
+
+                if selector_task == "y":
+                    print_('Get Single Task')
+                    data_task = gettask(token)
+                    if data_task is not None:
+                        if len(data_task) > 0:
+                            for task in data_task:
+                                id = task.get('id')
+                                type = task.get('type')
+                                title = task.get('title')
+                                if title not in ["One-time Stars Purchase", "Binance x TON", "Status Purchase"]:
                                     time.sleep(2)
-                                    payload = {
-                                        'task_id': id
-                                    }
+                                    if type == 'code':
+                                            payload = {"task_id":id,"payload":{"code":""}}
+                                    else:
+                                        payload = {
+                                                    'task_id': id
+                                                }
                                     data_done = donetask(token, payload)
                                     if data_done is not None:
-                                        print_(f"Task : {daily.get('title')} | Reward : {daily.get('award')} | Status: {data_done.get('is_completed')}")
-                    else:
-                        print_('No have daily task')
-
-                print_('Get Single Task')
-                data_task = gettask(token)
-                if data_task is not None:
-                    if len(data_task) > 0:
-                        for task in data_task:
-                            id = task.get('id')
-                            type = task.get('type')
-                            title = task.get('title')
-                            if title not in ["One-time Stars Purchase", "Binance x TON", "Status Purchase"]:
-                                time.sleep(2)
-                                if type == 'code':
-                                        payload = {"task_id":id,"payload":{"code":""}}
-                                else:
-                                    payload = {
-                                                'task_id': id
-                                            }
-                                data_done = donetask(token, payload)
-                                if data_done is not None:
-                                        print_(f"Task : {title} | Reward : {task.get('award')} | Status: {data_done.get('is_completed')}")
-                    else:
-                        print_('No have single task')
+                                            print_(f"Task : {title} | Reward : {task.get('award')} | Status: {data_done.get('is_completed')}")
+                        else:
+                            print_('No have single task')
                 time.sleep(3)
                 # if index != 0:
                 #     if ratings >= 2500:
